@@ -1,0 +1,83 @@
+version: "3.8"
+
+services:
+    # custom image
+    app:
+        build:
+            args:
+                user: leonardo
+                uid: 1000
+            context: ./
+            dockerfile: Dockerfile
+        image: leonardo/laravel-app
+        working_dir: /var/www/
+        volumes:
+            - ./:/var/www/
+        restart: unless-stopped
+        depends_on:
+            - redis
+            - postgres
+            - mailhog
+        networks:
+            - docker-laravel
+        environment:
+            PHP_MEMORY_LIMIT: 512M
+
+    #nginx
+    nginx:
+        image: nginx:alpine
+        restart: always
+        ports:
+            - 80:80
+        volumes:
+            - ./:/var/www
+            - ./docker/nginx/:/etc/nginx/conf.d/
+        networks:
+            - docker-laravel
+
+    # db
+    postgres:
+        image: postgres:14.1-alpine
+        restart: always
+        ports:
+            - '5432:5432'
+        volumes:
+           - ./.docker/postgres:/var/lib/postgresql/data
+        environment:
+            POSTGRES_USER: ${DB_USERNAME}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+            POSTGRES_DB: ${DB_DATABASE}
+            PGDATA: /var/lib/postgresql/data/pgdata
+        networks:
+            - docker-laravel
+
+    #pgadmin
+    pgadmin:
+        image: dpage/pgadmin4
+        environment:
+            PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+            PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+        ports:
+            - "16543:80"
+        networks:
+            - docker-laravel
+
+    # redis
+    redis:
+        image: redis
+        networks:
+            - docker-laravel
+
+    #mailhog
+    mailhog:
+        image: mailhog/mailhog:latest
+        restart: always
+        ports:
+            - 1025:1025
+            - 8025:8025
+        networks:
+            - docker-laravel
+
+networks:
+    docker-laravel:
+        driver: bridge
