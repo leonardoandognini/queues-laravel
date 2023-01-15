@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use \Illuminate\Support\Facades\Bus;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,7 +18,17 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('send-notifications-to-all', function (){
+Route::get('send-notifications-to-all', function () {
     \App\Jobs\SendNotificationsJob::dispatch();
     return 'ok';
+});
+
+Route::get('run-batch', function () {
+
+    Bus::batch([
+        new \App\Jobs\MakeOrder(),
+        new \App\Jobs\ValidateCard(),
+        new \App\Jobs\RunPayment()
+    ])->name('Run Batch Example' . rand(1, 10))->dispatch();
+
 });

@@ -2,8 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Models\User;
-use App\Notifications\NotifyUser;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -11,9 +10,9 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class SendNotificationsJob implements ShouldQueue
+class RunPayment implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable,Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
      * Create a new job instance.
@@ -32,8 +31,6 @@ class SendNotificationsJob implements ShouldQueue
      */
     public function handle()
     {
-        //User::all()->each(fn ($user) => SendNotificationJob::dispatch($user));
-        User::all()->each(fn ($user) => $user->notify(new NotifyUser()));
-
+        sleep(5);
     }
 }
