@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Models\User;
-use App\Notifications\NotifyUser;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -12,17 +11,20 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class SendNotificationJob implements ShouldQueue
+class TestExceptionJob implements ShouldQueue
 {
-    use Batchable,Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct( public User $user)
+    public function __construct(
+        protected User $user,
+        protected bool $needsToFail = false)
     {
+
     }
 
     /**
@@ -32,6 +34,15 @@ class SendNotificationJob implements ShouldQueue
      */
     public function handle()
     {
-        $this->user->notify(new NotifyUser());
+        if ($this->batch()->canceled()){
+            return;
+        }
+
+        ds('Running Job for User: '.$this->user->name)->info();
+        sleep(3);
+
+        if ($this->needsToFail){
+            throw new \Exception("falhou com o usuário ". $this->user->name, 1);
+        }
     }
 }
